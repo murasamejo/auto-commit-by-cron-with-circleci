@@ -1,0 +1,24 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: circleci/node:14.15.5
+    working_directory: ~/working_directory
+    steps:
+      - checkout
+      - run:
+          name: Hello, CircleCI cron World
+          command: |
+            echo 'Hello, CircleCI cron World!'
+workflows:
+  version: 2
+  lets_execute_cron:
+    triggers:
+      - schedule:
+          cron: '10 09 * * *'
+          filters:
+            branches:
+              only:
+                - main
+    jobs:
+      - build
