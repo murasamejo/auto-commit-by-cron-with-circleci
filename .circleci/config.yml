@@ -123,17 +123,84 @@ jobs:
             ruby --version
             which bundler
             bundler --version
+      - run:
+          name: gh をインストール
+          command: |
+            wget https://github.com/cli/cli/releases/download/v1.6.2/gh_1.6.2_linux_amd64.deb
+            sudo dpkg -i gh_1.6.2_linux_amd64.deb
+          shell: /bin/sh # デフォルト値（任意項目）
+          environment:
+            FOO: BAR
+          background: false # デフォルト値（任意項目）
+          working_directory: . # デフォルト値（任意項目）
+          no_output_timeout: 10m # デフォルト値（任意項目）
+          when: on_success # デフォルト値（任意項目）
+      - run:
+          name: gh のバージョンを確認する
+          command: |
+            which gh
+            $(which gh) --version
 
-  build:
+  cron:
     docker:
-      - image: circleci/node:14.15.5
+      - image: cimg/ruby:3.0.0
     working_directory: ~/working_directory
     steps:
       - checkout
       - run:
-          name: Hello, CircleCI cron World
+          name: echoコマンドで動作確認をする
           command: |
-            echo 'Hello, CircleCI cron World!'
+            echo 'Hello, cron用ジョブ！'
+          shell: /bin/sh # デフォルト値（任意項目）
+          environment:
+            CRON: WORLD
+          background: false # デフォルト値（任意項目）
+          working_directory: . # デフォルト値（任意項目）
+          no_output_timeout: 10m # デフォルト値（任意項目）
+          when: on_success # デフォルト値（任意項目）
+
+  # CLI によるローカルテスト用
+  build:
+    docker:
+      - image: cimg/ruby:3.0.0
+    working_directory: ~/working_directory
+    steps:
+      - checkout
+      - run:
+          name: echoコマンドで動作確認をする
+          command: |
+            echo 'Hello, CircleCI cron World on cimg/ruby:3.0.0 !'
+          shell: /bin/sh # デフォルト値（任意項目）
+          environment:
+            FOO: BAR
+          background: false # デフォルト値（任意項目）
+          working_directory: . # デフォルト値（任意項目）
+          no_output_timeout: 10m # デフォルト値（任意項目）
+          when: on_success # デフォルト値（任意項目）
+      - run:
+          name: Ruby および Bundler のバージョンを確認する
+          command: |
+            which ruby
+            ruby --version
+            which bundler
+            bundler --version
+      - run:
+          name: gh をインストールする
+          command: |
+            wget https://github.com/cli/cli/releases/download/v1.6.2/gh_1.6.2_linux_amd64.deb
+            sudo dpkg -i gh_1.6.2_linux_amd64.deb
+          shell: /bin/sh # デフォルト値（任意項目）
+          environment:
+            FOO: BAR
+          background: false # デフォルト値（任意項目）
+          working_directory: . # デフォルト値（任意項目）
+          no_output_timeout: 10m # デフォルト値（任意項目）
+          when: on_success # デフォルト値（任意項目）
+      - run:
+          name: gh のバージョンを確認する
+          command: |
+            which gh
+            $(which gh) --version
 
 workflows:
   version: 2
@@ -152,6 +219,18 @@ workflows:
     triggers:
       - schedule:
           cron: '10 09 * * *'
+          filters:
+            branches:
+              only:
+                - main
+    jobs:
+      - cron
+  # build を実行する workflow が含まれていないと、CircleCI CLI で実行ができない
+  dummy_for_circleci_cli:
+    triggers:
+      - schedule:
+          # 土曜日である 12/24 の 12:30
+          cron: '30 12 24 12 6'
           filters:
             branches:
               only:
