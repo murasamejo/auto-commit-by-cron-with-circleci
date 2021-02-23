@@ -1,9 +1,32 @@
-version: 2
+version: 2.1
+
+executors:
+  ruby_executor:
+    docker:
+      - image: cimg/ruby:<< parameters.version_tag >>
+    # resource_class:
+    # shell: /bin/sh
+    # working_directory: .
+    # environment:
+    parameters:
+      version_tag:
+        type: string
+        default: 2.7.2
+
 jobs:
   build_by_node:
     docker:
       # https://hub.docker.com/r/cimg/node
       - image: cimg/node:14.15.5
+        # name:
+        # entrypoint:
+        # command:
+        # user:
+        environment:
+          FOO: BAR
+          HOGE: FUGA
+        # auth:
+        # aws_auth:
     working_directory: ~/working_directory
     steps:
       - checkout
@@ -37,9 +60,12 @@ jobs:
             cat /etc/os-release
 
   build_by_ruby:
-    docker:
-      # https://hub.docker.com/r/cimg/ruby
-      - image: cimg/ruby:2.7.2
+    executor:
+      name: ruby_executor
+      version_tag: 2.7.2
+    # docker:
+    #   # https://hub.docker.com/r/cimg/ruby
+    #   - image: cimg/ruby:2.7.2
     working_directory: ~/working_directory
     steps:
       - checkout
@@ -74,11 +100,28 @@ jobs:
             cat /etc/issue
             cat /etc/os-release
 
+  build:
+    docker:
+      - image: circleci/node:14.15.5
+    working_directory: ~/working_directory
+    steps:
+      - checkout
+      - run:
+          name: Hello, CircleCI cron World
+          command: |
+            echo 'Hello, CircleCI cron World!'
+
 workflows:
   version: 2
-  hello_world:
+  hello_world_by_node_and_ruby:
     jobs:
       - build_by_node
+      - build_by_ruby
+  hello_world_by_node:
+    jobs:
+      - build_by_node
+  hello_world_by_ruby:
+    jobs:
       - build_by_ruby
   lets_execute_cron:
     triggers:
