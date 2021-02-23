@@ -11,6 +11,18 @@ jobs:
           name: Hello, CircleCI cron World on Node image
           command: |
             echo 'Hello, CircleCI cron on cimg/node:14.15.5 !'
+      - run:
+          name: Show Node.js version
+          command: |
+            which node
+            node -v
+            which npm
+            npm -v
+      - run:
+          name: Show Yarn version
+          command: |
+            which yarn
+            yarn -v
   build_by_ruby:
     docker:
       # https://hub.docker.com/r/cimg/ruby
@@ -22,6 +34,13 @@ jobs:
           name: Hello, CircleCI cron World on Ruby image
           command: |
             echo 'Hello, CircleCI cron World on cimg/ruby:2.7.2 !'
+      - run:
+          name: Show Ruby version
+          command: |
+            which ruby
+            ruby -v
+            which bundler
+            bundler -v
 
 workflows:
   version: 2
