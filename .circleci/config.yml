@@ -207,8 +207,12 @@ workflows:
   hello_world_by_node_and_ruby:
     jobs:
       - build_by_node
-      - build_by_ruby_2_7_2
-      - build_by_ruby_3_0_0
+      - build_by_ruby_2_7_2:
+          requires:
+            - build_by_node
+      - build_by_ruby_3_0_0:
+          requires:
+            - build_by_ruby_2_7_2
   hello_world_by_node:
     jobs:
       - build_by_node
