@@ -12,6 +12,9 @@ jobs:
             echo 'Hello, CircleCI cron World!'
 workflows:
   version: 2
+  hello_world:
+    jobs:
+      - build
   lets_execute_cron:
     triggers:
       - schedule:
