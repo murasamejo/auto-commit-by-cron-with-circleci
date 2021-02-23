@@ -158,8 +158,25 @@ jobs:
           working_directory: . # デフォルト値（任意項目）
           no_output_timeout: 10m # デフォルト値（任意項目）
           when: on_success # デフォルト値（任意項目）
+      - run:
+          name: Artifacts にファイルを書き出す
+          # "destination" が設定されていない場合の store_artifacts 記載のディレクトリは、自前で作らないとダメ
+          command: |
+            echo 'ハロー、NIFTY SERVER アーティファクト！' > /tmp/my_artifact
+            mkdir /tmp/bluemoon
+            echo 'ハロー、Bluemoon アーティファクト！' > /tmp/bluemoon/never.txt
+      # ログ等を保存する
+      - store_artifacts:
+          path: /tmp/my_artifact
+          # "destination" が指定されている場合は、パス名以降を具体的に指定するとエラーになるので注意する
+          destination: nifty_serve
+      - store_artifacts:
+          # "destination" を指定しない場合には、"path" のディレクトリを自前で mkdir しておかないとエラーになるので注意する
+          path: /tmp/bluemoon
 
   # CLI によるローカルテスト用
+  # アーティファクトはサポートされていない（正しい記述なら Success! にはなる）
+  # cache機構はサポートされていない（正しい記述なら Success! にはなる）
   build:
     docker:
       - image: cimg/ruby:3.0.0
@@ -201,6 +218,14 @@ jobs:
           command: |
             which gh
             $(which gh) --version
+      - run:
+          name: Artifacts にファイルを書き出す
+          command: |
+            echo 'ハロー、アーティファクト！' > /tmp/my_artifact
+      # ログ等を保存する
+      - store_artifacts:
+          path: /tmp/my_artifact
+          destination: hogefuga
 
 workflows:
   version: 2
@@ -213,6 +238,9 @@ workflows:
       - build_by_ruby_3_0_0:
           requires:
             - build_by_ruby_2_7_2
+      - cron:
+          requires:
+            - build_by_node
   hello_world_by_node:
     jobs:
       - build_by_node
@@ -233,7 +261,7 @@ workflows:
   dummy_for_circleci_cli:
     triggers:
       - schedule:
-          # 土曜日である 12/24 の 12:30
+          # 土曜日である 12/24 の 12:30 に実行する（実行を期待していない、ダミーの設定）
           cron: '30 12 24 12 6'
           filters:
             branches:
