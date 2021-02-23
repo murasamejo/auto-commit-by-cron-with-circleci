@@ -3,6 +3,7 @@ version: 2.1
 executors:
   ruby_executor:
     docker:
+      # https://hub.docker.com/r/cimg/ruby
       - image: cimg/ruby:<< parameters.version_tag >>
     # resource_class:
     # shell: /bin/sh
@@ -59,13 +60,10 @@ jobs:
             cat /etc/issue
             cat /etc/os-release
 
-  build_by_ruby:
+  build_by_ruby_2_7_2:
     executor:
       name: ruby_executor
       version_tag: 2.7.2
-    # docker:
-    #   # https://hub.docker.com/r/cimg/ruby
-    #   - image: cimg/ruby:2.7.2
     working_directory: ~/working_directory
     steps:
       - checkout
@@ -100,6 +98,32 @@ jobs:
             cat /etc/issue
             cat /etc/os-release
 
+  build_by_ruby_3_0_0:
+    executor:
+      name: ruby_executor
+      version_tag: 3.0.0
+    working_directory: ~/working_directory
+    steps:
+      - checkout
+      - run:
+          name: Hello, CircleCI cron World on Ruby image
+          command: |
+            echo 'Hello, CircleCI cron World on cimg/ruby:3.0.0 !'
+          shell: /bin/sh # デフォルト値（任意項目）
+          environment:
+            FOO: BAR
+          background: false # デフォルト値（任意項目）
+          working_directory: . # デフォルト値（任意項目）
+          no_output_timeout: 10m # デフォルト値（任意項目）
+          when: on_success # デフォルト値（任意項目）
+      - run:
+          name: Show Ruby version
+          command: |
+            which ruby
+            ruby --version
+            which bundler
+            bundler --version
+
   build:
     docker:
       - image: circleci/node:14.15.5
@@ -116,13 +140,14 @@ workflows:
   hello_world_by_node_and_ruby:
     jobs:
       - build_by_node
-      - build_by_ruby
+      - build_by_ruby_2_7_2
+      - build_by_ruby_3_0_0
   hello_world_by_node:
     jobs:
       - build_by_node
-  hello_world_by_ruby:
+  hello_world_by_ruby_2_7_2:
     jobs:
-      - build_by_ruby
+      - build_by_ruby_2_7_2
   lets_execute_cron:
     triggers:
       - schedule:
