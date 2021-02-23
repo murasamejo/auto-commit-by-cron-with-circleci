@@ -15,14 +15,27 @@ jobs:
           name: Show Node.js version
           command: |
             which node
-            node -v
+            node --version
             which npm
-            npm -v
+            npm --version
       - run:
           name: Show Yarn version
           command: |
             which yarn
-            yarn -v
+            yarn --version
+      - run:
+          name: 各種コマンドの確認
+          command: |
+            curl --version
+            wget --version
+            git --version
+      - run:
+          # Ubuntu 20.04.1
+          name: OS情報の確認
+          command: |
+            cat /etc/issue
+            cat /etc/os-release
+
   build_by_ruby:
     docker:
       # https://hub.docker.com/r/cimg/ruby
@@ -34,13 +47,32 @@ jobs:
           name: Hello, CircleCI cron World on Ruby image
           command: |
             echo 'Hello, CircleCI cron World on cimg/ruby:2.7.2 !'
+          shell: /bin/sh # デフォルト値（任意項目）
+          environment:
+            FOO: BAR
+          background: false # デフォルト値（任意項目）
+          working_directory: . # デフォルト値（任意項目）
+          no_output_timeout: 10m # デフォルト値（任意項目）
+          when: on_success # デフォルト値（任意項目）
       - run:
           name: Show Ruby version
           command: |
             which ruby
-            ruby -v
+            ruby --version
             which bundler
-            bundler -v
+            bundler --version
+      - run:
+          name: 各種コマンドの確認
+          command: |
+            curl --version
+            wget --version
+            git --version
+      - run:
+          # Ubuntu 20.04.1
+          name: OS情報の確認
+          command: |
+            cat /etc/issue
+            cat /etc/os-release
 
 workflows:
   version: 2
