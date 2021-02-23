@@ -1,16 +1,17 @@
-version: 2
+version: 2.1
 
 executors:
   ruby_executor:
     docker:
-      - image: cimg/ruby:<< parameters.tag >>
+      - image: cimg/ruby:<< parameters.version_tag >>
     # resource_class:
     # shell: /bin/sh
     # working_directory: .
     # environment:
     parameters:
-      tag: string
-      default: 2.7.2
+      version_tag:
+        type: string
+        default: 2.7.2
 
 jobs:
   build_by_node:
@@ -61,7 +62,7 @@ jobs:
   build_by_ruby:
     executor:
       name: ruby_executor
-      tag: 2.7.2
+      version_tag: 2.7.2
     # docker:
     #   # https://hub.docker.com/r/cimg/ruby
     #   - image: cimg/ruby:2.7.2
@@ -98,6 +99,17 @@ jobs:
           command: |
             cat /etc/issue
             cat /etc/os-release
+
+  build:
+    docker:
+      - image: circleci/node:14.15.5
+    working_directory: ~/working_directory
+    steps:
+      - checkout
+      - run:
+          name: Hello, CircleCI cron World
+          command: |
+            echo 'Hello, CircleCI cron World!'
 
 workflows:
   version: 2
