@@ -144,7 +144,11 @@ jobs:
   cron:
     docker:
       - image: cimg/ruby:3.0.0
-    working_directory: ~/working_directory
+        environment:
+          # https://circleci.com/docs/2.0/faq/#how-can-i-set-the-timezone-in-docker-images
+          TZ: "Asia/Tokyo"
+    # working_directory を変数化したい（使い回したいから）
+    working_directory:  ~/working_directory
     steps:
       - checkout
       - run:
@@ -159,12 +163,61 @@ jobs:
           no_output_timeout: 10m # デフォルト値（任意項目）
           when: on_success # デフォルト値（任意項目）
       - run:
+          name: gh をインストール
+          command: |
+            wget https://github.com/cli/cli/releases/download/v1.6.2/gh_1.6.2_linux_amd64.deb
+            sudo dpkg -i gh_1.6.2_linux_amd64.deb
+          shell: /bin/sh # デフォルト値（任意項目）
+          environment:
+            FOO: BAR
+          background: false # デフォルト値（任意項目）
+          working_directory: . # デフォルト値（任意項目）
+          no_output_timeout: 10m # デフォルト値（任意項目）
+          when: on_success # デフォルト値（任意項目）
+      - run:
+          name: gh のバージョンを確認する
+          command: |
+            which gh
+            $(which gh) --version
+      - run:
+          name: 現在日時を環境変数に格納する（使い回す事を考えて）
+          # https://circleci.com/docs/ja/2.0/env-vars/
+          # メモ: この $BASH_ENV による回避策は bash でのみ機能します。 他のシェルではおそらく機能しません。
+          # -> /bin/sh でも動いている気がする……
+          command: |
+            NOW_DATETIME=`date "+%Y%m%d_%H%M%S"`
+            echo "export NOW_DATETIME=`date '+%Y%m%d_%H%M%S'`" >> $BASH_ENV
+      - run:
           name: Artifacts にファイルを書き出す
           # "destination" が設定されていない場合の store_artifacts 記載のディレクトリは、自前で作らないとダメ
           command: |
             echo 'ハロー、NIFTY SERVER アーティファクト！' > /tmp/my_artifact
             mkdir /tmp/bluemoon
             echo 'ハロー、Bluemoon アーティファクト！' > /tmp/bluemoon/never.txt
+      - run:
+          name: $ git clone ～ $ git push
+          # CircleCI 上で GITHUB_HTTPS_USERNAME と GITHUB_TOKEN を設定する必要がある
+          command: |
+            git clone https://${GITHUB_HTTPS_USERNAME}:${GITHUB_HTTPS_PASSWORD}@github.com/murasamejo/auto-commit-by-cron-with-circleci.git
+            cd ~/working_directory/auto-commit-by-cron-with-circleci
+
+            git config user.email 'auto_committer@example.com'
+            git config user.name 'Auto Committer'
+
+            git switch -c "try_auto_commit_${NOW_DATETIME}"
+            git commit --allow-empty -m "Try git commit on CircleCI"
+
+            git branch -a > /tmp/bluemoon/git_branch_all.log
+            git log --oneline > /tmp/bluemoon/git_log_online.log
+
+            git push --set-upstream origin "try_auto_commit_${NOW_DATETIME}"
+      - run:
+          name: $ gh pr
+          # https://cli.github.com/manual/
+          # CircleCI 上で GITHUB_TOKEN を設定する必要がある
+          command: |
+            cd ~/working_directory/auto-commit-by-cron-with-circleci
+            gh pr create --base main --title "Try Auto Pull Request" --body "Hello, Try Auto Pull Request!"
       # ログ等を保存する
       - store_artifacts:
           path: /tmp/my_artifact
@@ -238,9 +291,9 @@ workflows:
       - build_by_ruby_3_0_0:
           requires:
             - build_by_ruby_2_7_2
-      - cron:
-          requires:
-            - build_by_node
+      # - cron:
+      #     requires:
+      #       - build_by_node
   hello_world_by_node:
     jobs:
       - build_by_node
@@ -250,18 +303,23 @@ workflows:
   lets_execute_cron:
     triggers:
       - schedule:
-          cron: '10 09 * * *'
+          # https://circleci.com/docs/ja/2.0/workflows/
+          # メモ: cron のステップ構文 (たとえば、*/1、*/20) はサポートされません。 エレメントのカンマ区切りリスト内の範囲エレメントもサポートされません。
+          # Docker 内のタイムゾーンに関係なく、+0000 であることに注意する（書かれている日時よりも 9時間 に実行される）
+          cron: '05 05 06 03 *'
           filters:
             branches:
               only:
                 - main
+                # テスト専用のブランチ名を定義して書いておくのが良さそう
+                - develop_circleci_cron
     jobs:
       - cron
   # build を実行する workflow が含まれていないと、CircleCI CLI で実行ができない
   dummy_for_circleci_cli:
     triggers:
       - schedule:
-          # 土曜日である 12/24 の 12:30 に実行する（実行を期待していない、ダミーの設定）
+          # 土曜日である 12/24 の 12:30 (+0000) に実行する（実行を期待していない、ダミーの設定）
           cron: '30 12 24 12 6'
           filters:
             branches:
