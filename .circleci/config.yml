@@ -18,7 +18,7 @@ jobs:
   build_by_node:
     docker:
       # https://hub.docker.com/r/cimg/node
-      - image: cimg/node:14.15.5
+      - image: cimg/node:14.17.6
         # name:
         # entrypoint:
         # command:
