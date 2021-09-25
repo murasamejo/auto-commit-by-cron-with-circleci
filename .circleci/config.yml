@@ -12,6 +12,7 @@ jobs:
     executor: ubuntu
     working_directory: ~/cron_hello_world
     steps:
+      - checkout
       - run:
           name: ハローワールド
           command: |
@@ -36,6 +37,7 @@ jobs:
     executor: ubuntu
     working_directory: ~/cron_good_night_world
     steps:
+      - checkout
       - run:
           name: グッナイワールド
           command: |
