@@ -40,10 +40,6 @@ jobs:
       - run:
           name: グッナイワールド
           command: |
-            echo pwd
-            pwd
-            echo whoami
-            whoami
             echo 'Good Night, World!'
           environment:
             FOO: BAR
@@ -56,31 +52,36 @@ jobs:
           command: |
             sudo apt update
       - run:
-          name: $SHELL を調べる
-          command: |
-            echo $SHELL
-            sudo chsh -s /bin/bash circleci
-      - run:
           name: nodenv を用いて Node.js をインストール
           command: |
             git clone https://github.com/nodenv/nodenv.git ~/.nodenv
             git clone https://github.com/nodenv/node-build.git ~/.nodenv/plugins/node-build
 
-            PATH="$HOME/.nodenv/bin:$PATH"
-            eval "$(nodenv init -)"
-            . ~/.profile
+            export PATH="$HOME/.nodenv/bin:$PATH"
+            export PATH="$HOME/.nodenv/shims:$PATH"
 
             nodenv install 16.10.0
             nodenv global 16.10.0
       - run:
           name: バージョン確認
           command: |
+            # 'run' のたびに新しいシェルスクリプトが起動する形なので、毎回環境変数を設定する
+            export PATH="$HOME/.nodenv/bin:$PATH"
+            export PATH="$HOME/.nodenv/shims:$PATH"
+
             node --version
             npm --version
       - run:
           name: npm 経由で Yarn をインストールする
           command: |
+            # 'run' のたびに新しいシェルスクリプトが起動する形なので、毎回環境変数を設定する
+            export PATH="$HOME/.nodenv/bin:$PATH"
+            export PATH="$HOME/.nodenv/shims:$PATH"
+
             npm install -g yarn
+            # eval "$(nodenv init -)" を行っていないので、実行ファイルをインストールした後には手動で rehash する必要がある
+            nodenv rehash
+
             yarn --version
 
   # $ circleci local execute 用（デバッグ用）
@@ -118,7 +119,7 @@ workflows:
           # https://circleci.com/docs/ja/2.0/workflows/
           # メモ: cron のステップ構文 (たとえば、*/1、*/20) はサポートされません。 エレメントのカンマ区切りリスト内の範囲エレメントもサポートされません。
           # Docker 内のタイムゾーンに関係なく、+0000 であることに注意する（書かれている日時よりも 9時間 に実行される）
-          cron: '30 03 * * *'
+          cron: '00 04 * * *'
           filters:
             branches:
               only:
