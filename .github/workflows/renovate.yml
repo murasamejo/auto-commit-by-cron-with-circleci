@@ -1,7 +1,7 @@
 name: Renovate
 on:
   schedule:
-    - cron: '*/15 * * * *'
+    - cron: '*/30 * * * *'
 jobs:
   renovate:
     runs-on: ubuntu-latest
@@ -11,4 +11,3 @@ jobs:
       - name: Renovate を実行する
         run: |
           docker run --rm -e RENOVATE_TOKEN=${{ secrets.RENOVATE_TOKEN }} -v "renovate.json:/usr/src/app/config.js" renovate/renovate $GITHUB_REPOSITORY
-
