@@ -23,13 +23,12 @@ jobs:
             which curl
             which wget
             which git
-            which php
-            which node
-            which ruby
+            which perl
             which jq
       - run:
-          name: OS情報の確認
+          name: OS情報等の確認
           command: |
+            echo $SHELL
             cat /etc/issue
             cat /etc/os-release
 
@@ -41,6 +40,10 @@ jobs:
       - run:
           name: グッナイワールド
           command: |
+            echo pwd
+            pwd
+            echo whoami
+            whoami
             echo 'Good Night, World!'
           environment:
             FOO: BAR
@@ -49,13 +52,51 @@ jobs:
           no_output_timeout: 1m
           when: on_success
       - run:
-          name: gh のバージョンを確認する
+          name: sudo apt update
           command: |
-            which gh
-            $(which gh) --version
+            sudo apt update
+      - run:
+          name: $SHELL を調べる
+          command: |
+            echo $SHELL
+            sudo chsh -s /bin/bash circleci
+      - run:
+          name: nodenv を用いて Node.js をインストール
+          command: |
+            git clone https://github.com/nodenv/nodenv.git ~/.nodenv
+            git clone https://github.com/nodenv/node-build.git ~/.nodenv/plugins/node-build
+
+            PATH="$HOME/.nodenv/bin:$PATH"
+            eval "$(nodenv init -)"
+            . ~/.profile
+
+            nodenv install 16.10.0
+            nodenv global 16.10.0
+      - run:
+          name: バージョン確認
+          command: |
+            node --version
+            npm --version
+      - run:
+          name: npm 経由で Yarn をインストールする
+          command: |
+            npm install -g yarn
+            yarn --version
+
+  # $ circleci local execute 用（デバッグ用）
+  build:
+    executor: ubuntu
+    working_directory: ~/build_job
+    steps:
+      - checkout
+      - run:
+          name: こんにちは
+          command: |
+            echo 'こんにちは'
 
 workflows:
   version: 2
+
   cron_hello_world:
     jobs:
       - hello_world
@@ -63,8 +104,8 @@ workflows:
       - schedule:
           # https://circleci.com/docs/ja/2.0/workflows/
           # メモ: cron のステップ構文 (たとえば、*/1、*/20) はサポートされません。 エレメントのカンマ区切りリスト内の範囲エレメントもサポートされません。
-          # Docker 内のタイムゾーンに関係なく、+0000 であることに注意する（書かれている日時よりも 9時間 に実行される）
-          cron: '20 00 * * *'
+          # Docker 内のタイムゾーンに関係なく、+0000 であることに注意する（書かれている日時よりも 9時間後 に実行される）
+          cron: '00 03 * * *'
           filters:
             branches:
               only:
@@ -77,8 +118,24 @@ workflows:
           # https://circleci.com/docs/ja/2.0/workflows/
           # メモ: cron のステップ構文 (たとえば、*/1、*/20) はサポートされません。 エレメントのカンマ区切りリスト内の範囲エレメントもサポートされません。
           # Docker 内のタイムゾーンに関係なく、+0000 であることに注意する（書かれている日時よりも 9時間 に実行される）
-          cron: '25 00 * * *'
+          cron: '30 03 * * *'
           filters:
             branches:
               only:
                 - main
+  debug_workflow:
+    jobs:
+      - good_night_world:
+          filters:
+            branches:
+              only:
+                - /circleci-debug.*/
+  # $ circleci local execute 用（デバッグ用）
+  circleci_cli:
+    jobs:
+      - build:
+          filters:
+            branches:
+              # CLI 以外で実行するつもりはない
+              only:
+                - /165b0f1eece480ef28581034ce672a5ac518595f00ac44c45de8c5a738172d49/
