@@ -110,7 +110,7 @@ workflows:
           filters:
             branches:
               only:
-                - main
+                - /hello_world.*/
   cron_good_night_world:
     jobs:
       - good_night_world
@@ -123,7 +123,7 @@ workflows:
           filters:
             branches:
               only:
-                - main
+                - /good_night_world.*/
   debug_workflow:
     jobs:
       - good_night_world:
